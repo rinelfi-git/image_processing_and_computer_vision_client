@@ -46,7 +46,7 @@ public class StructuringElementDialog extends javax.swing.JDialog {
     super(parent, modal);
     initComponents();
     buttonSize = 30;
-    selectedIcon = new ImageIcon(getClass().getResource("/emit/aivo/images/CheckTask.png"));
+    selectedIcon = new ImageIcon(getClass().getResource("/emit/ipcv/images/CheckTask.png"));
     buttonBorder = new LineBorder(previewPanel.getBackground());
     initElements();
     loadButtons();
