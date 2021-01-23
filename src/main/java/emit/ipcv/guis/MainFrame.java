@@ -2727,7 +2727,7 @@ public class MainFrame extends javax.swing.JFrame {
 					Socket socket = new Socket(setting.getRemoteIpAddress(), setting.getRemotePortAddress());
 					ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
 					DataPacket outputPacket = new DataPacket();
-					objectOutputStream.writeObject(outputPacket.setHeader(Const.HISTOGRAM_EQUALIZATION).setData(imageLoader));
+					objectOutputStream.writeObject(outputPacket.setHeader(Const.HISTOGRAM_EQUALIZATION).setData(image));
 					objectOutputStream.flush();
 					ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
 					DataPacket result = (DataPacket) objectInputStream.readObject();
