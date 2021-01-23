@@ -3031,7 +3031,35 @@ public class MainFrame extends javax.swing.JFrame {
 				});
 				hasChanges = true;
 			} else {
-			
+				try {
+					Socket socket = new Socket(setting.getRemoteIpAddress(), setting.getRemotePortAddress());
+					ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+					DataPacket outputPacket = new DataPacket();
+					objectOutputStream.writeObject(outputPacket.setHeader(Const.AVERAGE_FILTERING).setData(image));
+					objectOutputStream.flush();
+					ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
+					DataPacket result = (DataPacket) objectInputStream.readObject();
+					RGBA[][] fullColorImage = (RGBA[][]) result.getData();
+					applyImageChange(fullColorImage, bufferedImage);
+					imageLoader.setOriginalColor(fullColorImage);
+					applicationHistory.append(fullColorImage);
+					
+					objectOutputStream.close();
+					objectInputStream.close();
+					socket.close();
+				} catch (IOException | ClassNotFoundException e) {
+					System.out.println("[WARNING] " + e.getMessage());
+					JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
+				} finally {
+					SwingUtilities.invokeLater(() -> {
+						imageViewer.setImageLoader(imageLoader);
+						imageViewer.repaint();
+						processingBar.setVisible(false);
+						currentTitle = newProject ? defaultTitle : currentTitle;
+						setTitle("[(" + translationModel.get(language, "not_registered") + ")] - " + currentTitle);
+					});
+					hasChanges = true;
+				}
 			}
 		}).start();
 	}
@@ -3063,7 +3091,35 @@ public class MainFrame extends javax.swing.JFrame {
 				});
 				hasChanges = true;
 			} else {
-			
+				try {
+					Socket socket = new Socket(setting.getRemoteIpAddress(), setting.getRemotePortAddress());
+					ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+					DataPacket outputPacket = new DataPacket();
+					objectOutputStream.writeObject(outputPacket.setHeader(Const.MEDIAN_FILTERING).setData(image));
+					objectOutputStream.flush();
+					ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
+					DataPacket result = (DataPacket) objectInputStream.readObject();
+					RGBA[][] fullColorImage = (RGBA[][]) result.getData();
+					applyImageChange(fullColorImage, bufferedImage);
+					imageLoader.setOriginalColor(fullColorImage);
+					applicationHistory.append(fullColorImage);
+					
+					objectOutputStream.close();
+					objectInputStream.close();
+					socket.close();
+				} catch (IOException | ClassNotFoundException e) {
+					System.out.println("[WARNING] " + e.getMessage());
+					JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
+				} finally {
+					SwingUtilities.invokeLater(() -> {
+						imageViewer.setImageLoader(imageLoader);
+						imageViewer.repaint();
+						processingBar.setVisible(false);
+						currentTitle = newProject ? defaultTitle : currentTitle;
+						setTitle("[(" + translationModel.get(language, "not_registered") + ")] - " + currentTitle);
+					});
+					hasChanges = true;
+				}
 			}
 		}).start();
 	}
@@ -3130,6 +3186,7 @@ public class MainFrame extends javax.swing.JFrame {
 	
 	private void gaussianFilteringPerformed() {
 		new Thread(() -> {
+			SwingUtilities.invokeLater(() -> processingBar.setVisible(true));
 			System.out.println("[INFO] Gaussian filtering");
 			final ImageLoader imageLoader = imageViewer.getImageLoader();
 			BufferedImage bufferedImage = imageLoader.getBufferedImage();
