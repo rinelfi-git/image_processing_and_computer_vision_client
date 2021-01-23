@@ -299,7 +299,7 @@ public class MainFrame extends javax.swing.JFrame {
 	}//GEN-LAST:event_dilationMenuActionPerformed
 	
 	private void openingMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openingMenuActionPerformed
-		opening();
+		openingPerformed();
 	}//GEN-LAST:event_openingMenuActionPerformed
 	
 	private void topHatOpeningMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_topHatOpeningMenuActionPerformed
@@ -1750,39 +1750,39 @@ public class MainFrame extends javax.swing.JFrame {
 						hasChanges = true;
 					} else {
 						try{
-						Socket socket = new Socket(setting.getRemoteIpAddress(), setting.getRemotePortAddress());
-						ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-						DataPacket outputPacket = new DataPacket();
-						Map<String, Object> outputData = new HashMap<>();
-						outputData.put("x", values[0]);
-						outputData.put("y", values[1]);
-						outputData.put("structuring-element", values[2]);
-						outputData.put("image", imageLoader.getOriginalColor());
-						objectOutputStream.writeObject(outputPacket.setHeader(Const.EROSION).setData(outputData));
-						objectOutputStream.flush();
-						ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
-						DataPacket result = (DataPacket) objectInputStream.readObject();
-						RGBA[][] fullColorImage = (RGBA[][]) result.getData();
-						applyImageChange(fullColorImage, bufferedImage);
-						imageLoader.setOriginalColor(fullColorImage);
-						applicationHistory.append(fullColorImage);
-						
-						objectOutputStream.close();
-						objectInputStream.close();
-						socket.close();
-					} catch (IOException | ClassNotFoundException e) {
-						System.out.println("[WARNING] " + e.getMessage());
-						JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
-					} finally {
-						SwingUtilities.invokeLater(() -> {
-							imageViewer.setImageLoader(imageLoader);
-							imageViewer.repaint();
-							processingBar.setVisible(false);
-							currentTitle = newProject ? defaultTitle : currentTitle;
-							setTitle("[(" + translationModel.get(language, "not_registered") + ")] - " + currentTitle);
-						});
-						hasChanges = true;
-					}
+							Socket socket = new Socket(setting.getRemoteIpAddress(), setting.getRemotePortAddress());
+							ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+							DataPacket outputPacket = new DataPacket();
+							Map<String, Object> outputData = new HashMap<>();
+							outputData.put("x", values[0]);
+							outputData.put("y", values[1]);
+							outputData.put("structuring-element", values[2]);
+							outputData.put("image", imageLoader.getOriginalColor());
+							objectOutputStream.writeObject(outputPacket.setHeader(Const.EROSION).setData(outputData));
+							objectOutputStream.flush();
+							ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
+							DataPacket result = (DataPacket) objectInputStream.readObject();
+							RGBA[][] fullColorImage = (RGBA[][]) result.getData();
+							applyImageChange(fullColorImage, bufferedImage);
+							imageLoader.setOriginalColor(fullColorImage);
+							applicationHistory.append(fullColorImage);
+							
+							objectOutputStream.close();
+							objectInputStream.close();
+							socket.close();
+						} catch (IOException | ClassNotFoundException e) {
+							System.out.println("[WARNING] " + e.getMessage());
+							JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
+						} finally {
+							SwingUtilities.invokeLater(() -> {
+								imageViewer.setImageLoader(imageLoader);
+								imageViewer.repaint();
+								processingBar.setVisible(false);
+								currentTitle = newProject ? defaultTitle : currentTitle;
+								setTitle("[(" + translationModel.get(language, "not_registered") + ")] - " + currentTitle);
+							});
+							hasChanges = true;
+						}
 					}
 				}).start();
 			});
@@ -1889,7 +1889,40 @@ public class MainFrame extends javax.swing.JFrame {
 						});
 						hasChanges = true;
 					} else {
-						
+						try{
+							Socket socket = new Socket(setting.getRemoteIpAddress(), setting.getRemotePortAddress());
+							ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+							DataPacket outputPacket = new DataPacket();
+							Map<String, Object> outputData = new HashMap<>();
+							outputData.put("x", values[0]);
+							outputData.put("y", values[1]);
+							outputData.put("structuring-element", values[2]);
+							outputData.put("image", imageLoader.getOriginalColor());
+							objectOutputStream.writeObject(outputPacket.setHeader(Const.DILATION).setData(outputData));
+							objectOutputStream.flush();
+							ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
+							DataPacket result = (DataPacket) objectInputStream.readObject();
+							RGBA[][] fullColorImage = (RGBA[][]) result.getData();
+							applyImageChange(fullColorImage, bufferedImage);
+							imageLoader.setOriginalColor(fullColorImage);
+							applicationHistory.append(fullColorImage);
+							
+							objectOutputStream.close();
+							objectInputStream.close();
+							socket.close();
+						} catch (IOException | ClassNotFoundException e) {
+							System.out.println("[WARNING] " + e.getMessage());
+							JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
+						} finally {
+							SwingUtilities.invokeLater(() -> {
+								imageViewer.setImageLoader(imageLoader);
+								imageViewer.repaint();
+								processingBar.setVisible(false);
+								currentTitle = newProject ? defaultTitle : currentTitle;
+								setTitle("[(" + translationModel.get(language, "not_registered") + ")] - " + currentTitle);
+							});
+							hasChanges = true;
+						}
 					}
 				}).start();
 			});
@@ -1934,7 +1967,7 @@ public class MainFrame extends javax.swing.JFrame {
 		}).start();
 	}
 	
-	private void opening() {
+	private void openingPerformed() {
 		new Thread(() -> {
 			StructuringElementDialog openingDialog = new StructuringElementDialog(this, true).setTranslation(translationModel).setLanguage(language).initLanguage();
 			openingDialog.addOrigineListener(values -> {
@@ -1947,10 +1980,10 @@ public class MainFrame extends javax.swing.JFrame {
 					BufferedImage bufferedImage = null;
 					bufferedImage = imageLoader.getBufferedImage();
 					if (setting.isUseLocalHardware()) {
-						Operations erosion, dilation;
 						int x = (int) values[0];
 						int y = (int) values[1];
 						int[][] structuringElement = (int[][]) values[2];
+						Operations erosion, dilation;
 						erosion = new Erosion(structuringElement, x, y, new RgbImageHelper(imageLoader.getOriginalColor()).getGrayscale());
 						int[][] operationErosion = erosion.execute();
 						dilation = new Dilation(structuringElement, x, y, operationErosion);
@@ -1971,7 +2004,40 @@ public class MainFrame extends javax.swing.JFrame {
 						});
 						hasChanges = true;
 					} else {
-					
+						try{
+							Socket socket = new Socket(setting.getRemoteIpAddress(), setting.getRemotePortAddress());
+							ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+							DataPacket outputPacket = new DataPacket();
+							Map<String, Object> outputData = new HashMap<>();
+							outputData.put("x", values[0]);
+							outputData.put("y", values[1]);
+							outputData.put("structuring-element", values[2]);
+							outputData.put("image", imageLoader.getOriginalColor());
+							objectOutputStream.writeObject(outputPacket.setHeader(Const.OPENING).setData(outputData));
+							objectOutputStream.flush();
+							ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
+							DataPacket result = (DataPacket) objectInputStream.readObject();
+							RGBA[][] fullColorImage = (RGBA[][]) result.getData();
+							applyImageChange(fullColorImage, bufferedImage);
+							imageLoader.setOriginalColor(fullColorImage);
+							applicationHistory.append(fullColorImage);
+							
+							objectOutputStream.close();
+							objectInputStream.close();
+							socket.close();
+						} catch (IOException | ClassNotFoundException e) {
+							System.out.println("[WARNING] " + e.getMessage());
+							JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
+						} finally {
+							SwingUtilities.invokeLater(() -> {
+								imageViewer.setImageLoader(imageLoader);
+								imageViewer.repaint();
+								processingBar.setVisible(false);
+								currentTitle = newProject ? defaultTitle : currentTitle;
+								setTitle("[(" + translationModel.get(language, "not_registered") + ")] - " + currentTitle);
+							});
+							hasChanges = true;
+						}
 					}
 				}).start();
 			});
@@ -3340,7 +3406,7 @@ public class MainFrame extends javax.swing.JFrame {
 		new Thread(() -> {
 			StructuringElementDialog thickeningOpeningDialog = new StructuringElementDialog(this, true).setTranslation(translationModel).setLanguage(language).initLanguage();
 			thickeningOpeningDialog.addOrigineListener(values -> new Thread(() -> {
-				System.out.println("[INFO] Top hat opening");
+				System.out.println("[INFO] Top hat openingPerformed");
 				SwingUtilities.invokeLater(() -> processingBar.setVisible(true));
 				ImageLoader imageLoader = imageViewer.getImageLoader();
 				BufferedImage bufferedImage = null;

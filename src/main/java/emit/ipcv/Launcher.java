@@ -7,9 +7,6 @@ package emit.ipcv;
 
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import emit.ipcv.guis.MainFrame;
-import emit.ipcv.utils.colors.RGBA;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.nio.file.Files;
