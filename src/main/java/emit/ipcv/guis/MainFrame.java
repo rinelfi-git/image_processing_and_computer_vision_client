@@ -46,15 +46,10 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.file.Files;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -1028,7 +1023,7 @@ public class MainFrame extends javax.swing.JFrame {
 			remoteServerConfigurationDialog.setPortField(setting.getRemotePortAddress());
 			remoteServerConfigurationDialog.setDecoder(setting.isUseLocalHardware());
 			remoteServerConfigurationDialog.addObserver(address -> {
-				this.settingModel.changeEngineDecoder(Boolean.valueOf(address.get("use-local-hardware").toString()), (String)address.get("ip-address"), (Integer)address.get("port"));
+				this.settingModel.changeEngineDecoder(Boolean.valueOf(address.get("use-local-hardware").toString()), (String) address.get("ip-address"), (Integer) address.get("port"));
 				this.setting = this.settingModel.loadSetting();
 			});
 			remoteServerConfigurationDialog.setVisible(true);
@@ -1325,9 +1320,9 @@ public class MainFrame extends javax.swing.JFrame {
 				e.printStackTrace();
 			}
 			String imageName = newImage.getName();
-				imageLoader.setImageOriginalExtension(imageName.substring(imageName.lastIndexOf('.') + 1, imageName.length()));
-				System.out.printf("[INFO] Image file extension \"*.%s\"\n", imageLoader.getImageOriginalExtension());
-				image = imageLoader.getBufferedImage();
+			imageLoader.setImageOriginalExtension(imageName.substring(imageName.lastIndexOf('.') + 1, imageName.length()));
+			System.out.printf("[INFO] Image file extension \"*.%s\"\n", imageLoader.getImageOriginalExtension());
+			image = imageLoader.getBufferedImage();
 			RGBA[][] colorImage = imageLoader.getOriginalColor();
 			
 			applyImageChange(colorImage, image);
@@ -1733,7 +1728,7 @@ public class MainFrame extends javax.swing.JFrame {
 					ImageLoader imageLoader = imageViewer.getImageLoader();
 					BufferedImage bufferedImage = null;
 					bufferedImage = imageLoader.getBufferedImage();
-					if(setting.isUseLocalHardware()) {
+					if (setting.isUseLocalHardware()) {
 						int x = (int) values[0];
 						int y = (int) values[1];
 						int[][] structuringElement = (int[][]) values[2];
@@ -1772,7 +1767,7 @@ public class MainFrame extends javax.swing.JFrame {
 			BufferedImage bufferedImage = null;
 			bufferedImage = imageLoader.getBufferedImage();
 			RGBA[][] image = imageLoader.getOriginalColor();
-			if(setting.isUseLocalHardware()) {
+			if (setting.isUseLocalHardware()) {
 				final int threshold = new Otsu(new RgbImageHelper(image).getGrayscale()).execute();
 				System.out.println(String.format("[INFO] Otsu binarisation using \"%d\" as threshold", threshold));
 				ThresholdingBinarization transformation = new ThresholdingBinarization(new RgbImageHelper(image).getGrayscale(), threshold);
@@ -1812,8 +1807,9 @@ public class MainFrame extends javax.swing.JFrame {
 					objectInputStream.close();
 					socket.close();
 				} catch (IOException | ClassNotFoundException e) {
-					e.printStackTrace();
-				} finally {
+							System.out.println("[WARNING] " + e.getMessage());
+							JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
+						} finally {
 					SwingUtilities.invokeLater(() -> {
 						imageViewer.setImageLoader(imageLoader);
 						imageViewer.repaint();
@@ -1842,7 +1838,7 @@ public class MainFrame extends javax.swing.JFrame {
 					ImageLoader imageLoader = imageViewer.getImageLoader();
 					BufferedImage bufferedImage = null;
 					bufferedImage = imageLoader.getBufferedImage();
-					if(setting.isUseLocalHardware()) {
+					if (setting.isUseLocalHardware()) {
 						Operations operation = new Dilation(structuringElement, x, y, new RgbImageHelper(imageLoader.getOriginalColor()).getGrayscale());
 						int[][] newGrayscale = operation.execute();
 						
@@ -1881,7 +1877,7 @@ public class MainFrame extends javax.swing.JFrame {
 					ImageLoader imageLoader = imageViewer.getImageLoader();
 					BufferedImage bufferedImage = null;
 					bufferedImage = imageLoader.getBufferedImage();
-					if(setting.isUseLocalHardware()) {
+					if (setting.isUseLocalHardware()) {
 						int[][] structuringElement = values;
 						Operations operation = new AllOrNothing(structuringElement, new RgbImageHelper(imageLoader.getOriginalColor()).getGrayscale());
 						int[][] newGrayscale = operation.execute();
@@ -1918,7 +1914,7 @@ public class MainFrame extends javax.swing.JFrame {
 					ImageLoader imageLoader = imageViewer.getImageLoader();
 					BufferedImage bufferedImage = null;
 					bufferedImage = imageLoader.getBufferedImage();
-					if(setting.isUseLocalHardware()) {
+					if (setting.isUseLocalHardware()) {
 						Operations erosion, dilation;
 						int x = (int) values[0];
 						int y = (int) values[1];
@@ -2099,57 +2095,58 @@ public class MainFrame extends javax.swing.JFrame {
 					BufferedImage bufferedImage = null;
 					bufferedImage = imageLoader.getBufferedImage();
 					RGBA[][] image = imageLoader.getOriginalColor();
-          if(setting.isUseLocalHardware()) {
-	          RgbImageHelper rgbImageHelper = new RgbImageHelper(image);
-	          int[][] alphaOperation = new Shear2D(rgbImageHelper.getAlphas(), constants).execute(),
-		          redOperation = new Shear2D(rgbImageHelper.getReds(), constants).execute(),
-		          greenOperation = new Shear2D(rgbImageHelper.getGreens(), constants).execute(),
-		          blueOperation = new Shear2D(rgbImageHelper.getBlues(), constants).execute();
-	
-	          RGBA[][] fullColorImage = new RgbImageHelper(alphaOperation, redOperation, greenOperation, blueOperation).getImage();
-	          applyImageChange(fullColorImage, bufferedImage);
-	          SwingUtilities.invokeLater(() -> {
-		          imageViewer.setImageLoader(imageLoader);
-		          imageViewer.repaint();
-		          processingBar.setVisible(false);
-		          currentTitle = newProject ? defaultTitle : currentTitle;
-		          setTitle("[(" + translationModel.get(language, "not_registered") + ")] - " + currentTitle);
-	          });
-	          hasChanges = true;
-          } else {
-	          try {
-	          	Socket socket = new Socket(setting.getRemoteIpAddress(), setting.getRemotePortAddress());
-		          ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-		          DataPacket outputPacket = new DataPacket();
-		          Map<String, Object> outputData = new HashMap<>();
-		          outputData.put("constants", constants);
-		          outputData.put("image", image);
-		          objectOutputStream.writeObject(outputPacket.setHeader(Const.SHEAR).setData(outputData));
-		          objectOutputStream.flush();
-		          
-		          ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
-		          DataPacket result = (DataPacket) objectInputStream.readObject();
-		          RGBA[][] fullColorImage = (RGBA[][]) result.getData();
-		          applyImageChange(fullColorImage, bufferedImage);
-		          imageLoader.setOriginalColor(fullColorImage);
-		          applicationHistory.append(fullColorImage);
-		          
-		          objectOutputStream.close();
-		          objectInputStream.close();
-		          socket.close();
-	          } catch (IOException | ClassNotFoundException e) {
-		          e.printStackTrace();
-	          } finally {
-		          SwingUtilities.invokeLater(() -> {
-			          imageViewer.setImageLoader(imageLoader);
-			          imageViewer.repaint();
-			          processingBar.setVisible(false);
-			          currentTitle = newProject ? defaultTitle : currentTitle;
-			          setTitle("[(" + translationModel.get(language, "not_registered") + ")] - " + currentTitle);
-		          });
-		          hasChanges = true;
-	          }
-          }
+					if (setting.isUseLocalHardware()) {
+						RgbImageHelper rgbImageHelper = new RgbImageHelper(image);
+						int[][] alphaOperation = new Shear2D(rgbImageHelper.getAlphas(), constants).execute(),
+							redOperation = new Shear2D(rgbImageHelper.getReds(), constants).execute(),
+							greenOperation = new Shear2D(rgbImageHelper.getGreens(), constants).execute(),
+							blueOperation = new Shear2D(rgbImageHelper.getBlues(), constants).execute();
+						
+						RGBA[][] fullColorImage = new RgbImageHelper(alphaOperation, redOperation, greenOperation, blueOperation).getImage();
+						applyImageChange(fullColorImage, bufferedImage);
+						SwingUtilities.invokeLater(() -> {
+							imageViewer.setImageLoader(imageLoader);
+							imageViewer.repaint();
+							processingBar.setVisible(false);
+							currentTitle = newProject ? defaultTitle : currentTitle;
+							setTitle("[(" + translationModel.get(language, "not_registered") + ")] - " + currentTitle);
+						});
+						hasChanges = true;
+					} else {
+						try {
+							Socket socket = new Socket(setting.getRemoteIpAddress(), setting.getRemotePortAddress());
+							ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+							DataPacket outputPacket = new DataPacket();
+							Map<String, Object> outputData = new HashMap<>();
+							outputData.put("constants", constants);
+							outputData.put("image", image);
+							objectOutputStream.writeObject(outputPacket.setHeader(Const.SHEAR).setData(outputData));
+							objectOutputStream.flush();
+							
+							ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
+							DataPacket result = (DataPacket) objectInputStream.readObject();
+							RGBA[][] fullColorImage = (RGBA[][]) result.getData();
+							applyImageChange(fullColorImage, bufferedImage);
+							imageLoader.setOriginalColor(fullColorImage);
+							applicationHistory.append(fullColorImage);
+							
+							objectOutputStream.close();
+							objectInputStream.close();
+							socket.close();
+						} catch (IOException | ClassNotFoundException e) {
+							System.out.println("[WARNING] " + e.getMessage());
+							JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
+						} finally {
+							SwingUtilities.invokeLater(() -> {
+								imageViewer.setImageLoader(imageLoader);
+								imageViewer.repaint();
+								processingBar.setVisible(false);
+								currentTitle = newProject ? defaultTitle : currentTitle;
+								setTitle("[(" + translationModel.get(language, "not_registered") + ")] - " + currentTitle);
+							});
+							hasChanges = true;
+						}
+					}
 				}).start();
 			});
 			shearDialog.setVisible(true);
@@ -2169,7 +2166,7 @@ public class MainFrame extends javax.swing.JFrame {
 					BufferedImage bufferedImage = null;
 					bufferedImage = imageLoader.getBufferedImage();
 					RGBA[][] image = imageLoader.getOriginalColor();
-					if(setting.isUseLocalHardware()) {
+					if (setting.isUseLocalHardware()) {
 						RgbImageHelper rgbImageHelper = new RgbImageHelper(image);
 						
 						int[][] alphaOperation = new Homothety2D(rgbImageHelper.getAlphas(), constants).execute(),
@@ -2210,7 +2207,8 @@ public class MainFrame extends javax.swing.JFrame {
 							objectInputStream.close();
 							socket.close();
 						} catch (IOException | ClassNotFoundException e) {
-							e.printStackTrace();
+							System.out.println("[WARNING] " + e.getMessage());
+							JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
 						} finally {
 							SwingUtilities.invokeLater(() -> {
 								imageViewer.setImageLoader(imageLoader);
@@ -2238,10 +2236,9 @@ public class MainFrame extends javax.swing.JFrame {
 						processingBar.setVisible(true);
 					});
 					final ImageLoader imageLoader = imageViewer.getImageLoader();
-					BufferedImage bufferedImage = null;
-					bufferedImage = imageLoader.getBufferedImage();
+					BufferedImage bufferedImage = imageLoader.getBufferedImage();
 					RGBA[][] image = imageLoader.getOriginalColor();
-					if(setting.isUseLocalHardware()) {
+					if (setting.isUseLocalHardware()) {
 						RgbImageHelper rgbImageHelper = new RgbImageHelper(image);
 						
 						int[][] alphaRotation = new Rotation2D(rgbImageHelper.getAlphas(), angle).execute(),
@@ -2283,7 +2280,8 @@ public class MainFrame extends javax.swing.JFrame {
 							objectInputStream.close();
 							socket.close();
 						} catch (IOException | ClassNotFoundException e) {
-							e.printStackTrace();
+							System.out.println("[WARNING] " + e.getMessage());
+							JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
 						} finally {
 							SwingUtilities.invokeLater(() -> {
 								imageViewer.setImageLoader(imageLoader);
@@ -2311,7 +2309,7 @@ public class MainFrame extends javax.swing.JFrame {
 			BufferedImage bufferedImage = null;
 			bufferedImage = imageLoader.getBufferedImage();
 			RGBA[][] image = imageLoader.getOriginalColor();
-			if(setting.isUseLocalHardware()) {
+			if (setting.isUseLocalHardware()) {
 				RgbImageHelper rgbImageHelper = new RgbImageHelper(image);
 				
 				int[][] alphaOperation = new SymmetryX2D(rgbImageHelper.getAlphas()).execute(),
@@ -2349,8 +2347,9 @@ public class MainFrame extends javax.swing.JFrame {
 					objectInputStream.close();
 					socket.close();
 				} catch (IOException | ClassNotFoundException e) {
-					e.printStackTrace();
-				} finally {
+							System.out.println("[WARNING] " + e.getMessage());
+							JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
+						} finally {
 					SwingUtilities.invokeLater(() -> {
 						imageViewer.setImageLoader(imageLoader);
 						imageViewer.repaint();
@@ -2373,7 +2372,7 @@ public class MainFrame extends javax.swing.JFrame {
 			final ImageLoader imageLoader = imageViewer.getImageLoader();
 			BufferedImage bufferedImage = imageLoader.getBufferedImage();
 			RGBA[][] image = imageLoader.getOriginalColor();
-			if(setting.isUseLocalHardware()) {
+			if (setting.isUseLocalHardware()) {
 				RgbImageHelper rgbImageHelper = new RgbImageHelper(image);
 				
 				int[][] alphaOperation = new SymmetryY2D(rgbImageHelper.getAlphas()).execute(),
@@ -2411,8 +2410,9 @@ public class MainFrame extends javax.swing.JFrame {
 					objectInputStream.close();
 					socket.close();
 				} catch (IOException | ClassNotFoundException e) {
-					e.printStackTrace();
-				} finally {
+							System.out.println("[WARNING] " + e.getMessage());
+							JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
+						} finally {
 					SwingUtilities.invokeLater(() -> {
 						imageViewer.setImageLoader(imageLoader);
 						imageViewer.repaint();
@@ -2433,7 +2433,7 @@ public class MainFrame extends javax.swing.JFrame {
 			final ImageLoader imageLoader = imageViewer.getImageLoader();
 			BufferedImage bufferedImage = imageLoader.getBufferedImage();
 			RGBA[][] image = imageLoader.getOriginalColor();
-			if(setting.isUseLocalHardware()) {
+			if (setting.isUseLocalHardware()) {
 				RgbImageHelper rgbImageHelper = new RgbImageHelper(image);
 				
 				int[][] alphaOperation = new SymmetryO2D(rgbImageHelper.getAlphas()).execute(),
@@ -2471,8 +2471,9 @@ public class MainFrame extends javax.swing.JFrame {
 					objectInputStream.close();
 					socket.close();
 				} catch (IOException | ClassNotFoundException e) {
-					e.printStackTrace();
-				} finally {
+							System.out.println("[WARNING] " + e.getMessage());
+							JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
+						} finally {
 					SwingUtilities.invokeLater(() -> {
 						imageViewer.setImageLoader(imageLoader);
 						imageViewer.repaint();
@@ -2494,9 +2495,8 @@ public class MainFrame extends javax.swing.JFrame {
 				new Thread(() -> {
 					SwingUtilities.invokeLater(() -> processingBar.setVisible(true));
 					final ImageLoader imageLoader = imageViewer.getImageLoader();
-					BufferedImage bufferedImage = null;
-					bufferedImage = imageLoader.getBufferedImage();
-					if(setting.isUseLocalHardware()) {
+					BufferedImage bufferedImage = imageLoader.getBufferedImage();
+					if (setting.isUseLocalHardware()) {
 						int[][] grayscale = new RgbImageHelper(imageLoader.getOriginalColor()).getGrayscale();
 						ThresholdingBinarization transformation = new ThresholdingBinarization(grayscale, threshold);
 						int[][] newGrayscale = transformation.execute();
@@ -2522,7 +2522,7 @@ public class MainFrame extends javax.swing.JFrame {
 							DataPacket outputPacket = new DataPacket();
 							Map<String, Object> outputData = new HashMap<>();
 							outputData.put("threshold", threshold);
-							outputData.put("image-loader", imageLoader);
+							outputData.put("image", imageLoader.getOriginalColor());
 							objectOutputStream.writeObject(outputPacket.setHeader(Const.BINARIZATION).setData(outputData));
 							objectOutputStream.flush();
 							ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
@@ -2561,7 +2561,7 @@ public class MainFrame extends javax.swing.JFrame {
 			final ImageLoader imageLoader = imageViewer.getImageLoader();
 			BufferedImage bufferedImage = imageLoader.getBufferedImage();
 			RGBA[][] image = imageLoader.getOriginalColor();
-			if(setting.isUseLocalHardware()) {
+			if (setting.isUseLocalHardware()) {
 				RgbImageHelper rgbImageHelper = new RgbImageHelper(image);
 				
 				int[][] redOperation = new InvertGrayscale(rgbImageHelper.getReds()).execute(),
@@ -2598,8 +2598,9 @@ public class MainFrame extends javax.swing.JFrame {
 					objectInputStream.close();
 					socket.close();
 				} catch (IOException | ClassNotFoundException e) {
-					e.printStackTrace();
-				} finally {
+							System.out.println("[WARNING] " + e.getMessage());
+							JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
+						} finally {
 					SwingUtilities.invokeLater(() -> {
 						imageViewer.setImageLoader(imageLoader);
 						imageViewer.repaint();
@@ -2619,7 +2620,7 @@ public class MainFrame extends javax.swing.JFrame {
 			SwingUtilities.invokeLater(() -> processingBar.setVisible(true));
 			final ImageLoader imageLoader = imageViewer.getImageLoader();
 			BufferedImage bufferedImage = imageLoader.getBufferedImage();
-			if(setting.isUseLocalHardware()){
+			if (setting.isUseLocalHardware()) {
 				PapertTurtle papertTurtle = new PapertTurtle(new RgbImageHelper(imageLoader.getOriginalColor()).getGrayscale());
 				int[][] newGrayscale = papertTurtle.execute();
 				
@@ -2655,8 +2656,9 @@ public class MainFrame extends javax.swing.JFrame {
 					objectInputStream.close();
 					socket.close();
 				} catch (IOException | ClassNotFoundException e) {
-					e.printStackTrace();
-				} finally {
+							System.out.println("[WARNING] " + e.getMessage());
+							JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
+						} finally {
 					SwingUtilities.invokeLater(() -> {
 						imageViewer.setImageLoader(imageLoader);
 						imageViewer.repaint();
@@ -2677,7 +2679,7 @@ public class MainFrame extends javax.swing.JFrame {
 			ImageLoader imageLoader = imageViewer.getImageLoader();
 			BufferedImage bufferedImage = imageLoader.getBufferedImage();
 			RGBA[][] image = imageLoader.getOriginalColor();
-			if(setting.isUseLocalHardware()) {
+			if (setting.isUseLocalHardware()) {
 				RgbImageHelper rgbImageHelper = new RgbImageHelper(image);
 				
 				int[] redHistogram = new HistogramEqualization(rgbImageHelper.getReds()).execute(),
@@ -2738,8 +2740,9 @@ public class MainFrame extends javax.swing.JFrame {
 					objectInputStream.close();
 					socket.close();
 				} catch (IOException | ClassNotFoundException e) {
-					e.printStackTrace();
-				} finally {
+							System.out.println("[WARNING] " + e.getMessage());
+							JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
+						} finally {
 					SwingUtilities.invokeLater(() -> {
 						imageViewer.setImageLoader(imageLoader);
 						imageViewer.repaint();
@@ -2763,7 +2766,7 @@ public class MainFrame extends javax.swing.JFrame {
 				BufferedImage bufferedImage = null;
 				bufferedImage = imageLoader.getBufferedImage();
 				RGBA[][] image = imageLoader.getOriginalColor();
-				if(setting.isUseLocalHardware()) {
+				if (setting.isUseLocalHardware()) {
 					RgbImageHelper rgbImageHelper = new RgbImageHelper(image);
 					
 					int[][] redOperation = new DynamicDisplay(rgbImageHelper.getReds(), minMax[0], minMax[1]).execute(),
@@ -2828,7 +2831,7 @@ public class MainFrame extends javax.swing.JFrame {
 			final ImageLoader imageLoader = imageViewer.getImageLoader();
 			BufferedImage bufferedImage = imageLoader.getBufferedImage();
 			RGBA[][] image = imageLoader.getOriginalColor();
-			if(this.setting.isUseLocalHardware()) {
+			if (this.setting.isUseLocalHardware()) {
 				RgbImageHelper rgbImageHelper = new RgbImageHelper(image);
 				
 				int[][] redOperation = new SobelFilter1(rgbImageHelper.getReds()).execute(),
@@ -2865,8 +2868,9 @@ public class MainFrame extends javax.swing.JFrame {
 					objectInputStream.close();
 					socket.close();
 				} catch (IOException | ClassNotFoundException e) {
-					e.printStackTrace();
-				} finally {
+							System.out.println("[WARNING] " + e.getMessage());
+							JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
+						} finally {
 					SwingUtilities.invokeLater(() -> {
 						imageViewer.setImageLoader(imageLoader);
 						imageViewer.repaint();
@@ -2887,7 +2891,7 @@ public class MainFrame extends javax.swing.JFrame {
 			final ImageLoader imageLoader = imageViewer.getImageLoader();
 			BufferedImage bufferedImage = imageLoader.getBufferedImage();
 			RGBA[][] image = imageLoader.getOriginalColor();
-			if(setting.isUseLocalHardware()) {
+			if (setting.isUseLocalHardware()) {
 				RgbImageHelper rgbImageHelper = new RgbImageHelper(image);
 				
 				int[][] redOperation = new CustomFilter1(rgbImageHelper.getReds()).execute(),
@@ -2924,8 +2928,9 @@ public class MainFrame extends javax.swing.JFrame {
 					objectInputStream.close();
 					socket.close();
 				} catch (IOException | ClassNotFoundException e) {
-					e.printStackTrace();
-				} finally {
+							System.out.println("[WARNING] " + e.getMessage());
+							JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
+						} finally {
 					SwingUtilities.invokeLater(() -> {
 						imageViewer.setImageLoader(imageLoader);
 						imageViewer.repaint();
@@ -2946,7 +2951,7 @@ public class MainFrame extends javax.swing.JFrame {
 			final ImageLoader imageLoader = imageViewer.getImageLoader();
 			BufferedImage bufferedImage = imageLoader.getBufferedImage();
 			RGBA[][] image = imageLoader.getOriginalColor();
-			if(setting.isUseLocalHardware()) {
+			if (setting.isUseLocalHardware()) {
 				RgbImageHelper rgbImageHelper = new RgbImageHelper(image);
 				
 				int[][] redOperation = new SobelFilter2(rgbImageHelper.getReds()).execute(),
@@ -2983,8 +2988,9 @@ public class MainFrame extends javax.swing.JFrame {
 					objectInputStream.close();
 					socket.close();
 				} catch (IOException | ClassNotFoundException e) {
-					e.printStackTrace();
-				} finally {
+							System.out.println("[WARNING] " + e.getMessage());
+							JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
+						} finally {
 					SwingUtilities.invokeLater(() -> {
 						imageViewer.setImageLoader(imageLoader);
 						imageViewer.repaint();
@@ -3005,7 +3011,7 @@ public class MainFrame extends javax.swing.JFrame {
 			final ImageLoader imageLoader = imageViewer.getImageLoader();
 			BufferedImage bufferedImage = imageLoader.getBufferedImage();
 			RGBA[][] image = imageLoader.getOriginalColor();
-			if(setting.isUseLocalHardware()) {
+			if (setting.isUseLocalHardware()) {
 				RgbImageHelper rgbImageHelper = new RgbImageHelper(image);
 				
 				int[][] redOperation = new AverageFilter(rgbImageHelper.getReds()).execute(),
@@ -3037,7 +3043,7 @@ public class MainFrame extends javax.swing.JFrame {
 			final ImageLoader imageLoader = imageViewer.getImageLoader();
 			BufferedImage bufferedImage = imageLoader.getBufferedImage();
 			RGBA[][] image = imageLoader.getOriginalColor();
-			if(setting.isUseLocalHardware()) {
+			if (setting.isUseLocalHardware()) {
 				RgbImageHelper rgbImageHelper = new RgbImageHelper(image);
 				
 				int[][] redOperation = new MedianFilter(rgbImageHelper.getReds()).execute(),
@@ -3056,7 +3062,7 @@ public class MainFrame extends javax.swing.JFrame {
 					setTitle("[(" + translationModel.get(language, "not_registered") + ")] - " + currentTitle);
 				});
 				hasChanges = true;
-			}else {
+			} else {
 			
 			}
 		}).start();
@@ -3069,7 +3075,7 @@ public class MainFrame extends javax.swing.JFrame {
 			final ImageLoader imageLoader = imageViewer.getImageLoader();
 			BufferedImage bufferedImage = imageLoader.getBufferedImage();
 			RGBA[][] image = imageLoader.getOriginalColor();
-			if(setting.isUseLocalHardware()) {
+			if (setting.isUseLocalHardware()) {
 				RgbImageHelper rgbImageHelper = new RgbImageHelper(image);
 				
 				int[][] redOperation = new ConservativeFilter(rgbImageHelper.getReds()).execute(),
@@ -3106,8 +3112,9 @@ public class MainFrame extends javax.swing.JFrame {
 					objectInputStream.close();
 					socket.close();
 				} catch (IOException | ClassNotFoundException e) {
-					e.printStackTrace();
-				} finally {
+							System.out.println("[WARNING] " + e.getMessage());
+							JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
+						} finally {
 					SwingUtilities.invokeLater(() -> {
 						imageViewer.setImageLoader(imageLoader);
 						imageViewer.repaint();
@@ -3127,7 +3134,7 @@ public class MainFrame extends javax.swing.JFrame {
 			final ImageLoader imageLoader = imageViewer.getImageLoader();
 			BufferedImage bufferedImage = imageLoader.getBufferedImage();
 			RGBA[][] image = imageLoader.getOriginalColor();
-			if(setting.isUseLocalHardware()) {
+			if (setting.isUseLocalHardware()) {
 				RgbImageHelper rgbImageHelper = new RgbImageHelper(image);
 				
 				int[][] redOperation = new GaussianFilter(rgbImageHelper.getReds()).execute(),
@@ -3164,8 +3171,9 @@ public class MainFrame extends javax.swing.JFrame {
 					objectInputStream.close();
 					socket.close();
 				} catch (IOException | ClassNotFoundException e) {
-					e.printStackTrace();
-				} finally {
+							System.out.println("[WARNING] " + e.getMessage());
+							JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
+						} finally {
 					SwingUtilities.invokeLater(() -> {
 						imageViewer.setImageLoader(imageLoader);
 						imageViewer.repaint();
@@ -3186,7 +3194,7 @@ public class MainFrame extends javax.swing.JFrame {
 			final ImageLoader imageLoader = imageViewer.getImageLoader();
 			BufferedImage bufferedImage = imageLoader.getBufferedImage();
 			RGBA[][] image = imageLoader.getOriginalColor();
-			if(setting.isUseLocalHardware()) {
+			if (setting.isUseLocalHardware()) {
 				RgbImageHelper rgbImageHelper = new RgbImageHelper(image);
 				
 				int[][] redOperation = new MiddleFilter(rgbImageHelper.getReds()).execute(),
@@ -3205,7 +3213,7 @@ public class MainFrame extends javax.swing.JFrame {
 					setTitle("[(" + translationModel.get(language, "not_registered") + ")] - " + currentTitle);
 				});
 				hasChanges = true;
-			}else {
+			} else {
 				try {
 					Socket socket = new Socket(setting.getRemoteIpAddress(), setting.getRemotePortAddress());
 					ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
@@ -3223,8 +3231,9 @@ public class MainFrame extends javax.swing.JFrame {
 					objectInputStream.close();
 					socket.close();
 				} catch (IOException | ClassNotFoundException e) {
-					e.printStackTrace();
-				} finally {
+							System.out.println("[WARNING] " + e.getMessage());
+							JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
+						} finally {
 					SwingUtilities.invokeLater(() -> {
 						imageViewer.setImageLoader(imageLoader);
 						imageViewer.repaint();
@@ -3247,7 +3256,7 @@ public class MainFrame extends javax.swing.JFrame {
 				ImageLoader imageLoader = imageViewer.getImageLoader();
 				BufferedImage bufferedImage = null;
 				bufferedImage = imageLoader.getBufferedImage();
-				if(setting.isUseLocalHardware()) {
+				if (setting.isUseLocalHardware()) {
 					int x = (int) values[0];
 					int y = (int) values[1];
 					int[][] structuringElement = (int[][]) values[2];
@@ -3277,7 +3286,7 @@ public class MainFrame extends javax.swing.JFrame {
 						setTitle("[(" + translationModel.get(language, "not_registered") + ")] - " + currentTitle);
 					});
 					hasChanges = true;
-				}else {
+				} else {
 					try {
 						Socket socket = new Socket(setting.getRemoteIpAddress(), setting.getRemotePortAddress());
 						ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
@@ -3324,7 +3333,7 @@ public class MainFrame extends javax.swing.JFrame {
 				ImageLoader imageLoader = imageViewer.getImageLoader();
 				BufferedImage bufferedImage = null;
 				bufferedImage = imageLoader.getBufferedImage();
-				if(setting.isUseLocalHardware()) {
+				if (setting.isUseLocalHardware()) {
 					int x = (int) values[0];
 					int y = (int) values[1];
 					int[][] structuringElement = (int[][]) values[2];
@@ -3400,7 +3409,7 @@ public class MainFrame extends javax.swing.JFrame {
 				SwingUtilities.invokeLater(() -> processingBar.setVisible(true));
 				ImageLoader imageLoader = imageViewer.getImageLoader();
 				BufferedImage bufferedImage = imageLoader.getBufferedImage();
-				if(setting.isUseLocalHardware()) {
+				if (setting.isUseLocalHardware()) {
 					int[][] binaryGrayscale = new ThresholdingBinarization(new RgbImageHelper(imageLoader.getOriginalColor()).getGrayscale(), new Otsu(new RgbImageHelper(imageLoader.getOriginalColor()).getGrayscale()).execute()).execute();
 					int[][] allOrNothingGrayscale = new AllOrNothing(structuringElement, new RgbImageHelper(imageLoader.getOriginalColor()).getGrayscale()).execute();
 					GrayscaleImageHelper grayscaleHelper = new GrayscaleImageHelper(binaryGrayscale);
@@ -3442,7 +3451,7 @@ public class MainFrame extends javax.swing.JFrame {
 			final ImageLoader imageLoader = imageViewer.getImageLoader();
 			BufferedImage bufferedImage = imageLoader.getBufferedImage();
 			RGBA[][] image = imageLoader.getOriginalColor();
-			if(setting.isUseLocalHardware()) {
+			if (setting.isUseLocalHardware()) {
 				RgbImageHelper rgbImageHelper = new RgbImageHelper(image);
 				
 				int[][] redOperation = new LaplacianFilter(rgbImageHelper.getReds()).execute(),
@@ -3479,8 +3488,9 @@ public class MainFrame extends javax.swing.JFrame {
 					objectInputStream.close();
 					socket.close();
 				} catch (IOException | ClassNotFoundException e) {
-					e.printStackTrace();
-				} finally {
+							System.out.println("[WARNING] " + e.getMessage());
+							JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
+						} finally {
 					SwingUtilities.invokeLater(() -> {
 						imageViewer.setImageLoader(imageLoader);
 						imageViewer.repaint();
@@ -3502,7 +3512,7 @@ public class MainFrame extends javax.swing.JFrame {
 			BufferedImage bufferedImage = null;
 			bufferedImage = imageLoader.getBufferedImage();
 			RGBA[][] image = imageLoader.getOriginalColor();
-			if(setting.isUseLocalHardware()){
+			if (setting.isUseLocalHardware()) {
 				RgbImageHelper rgbImageHelper = new RgbImageHelper(image);
 				
 				int[][] redOperation = new RehausseurFilter(rgbImageHelper.getReds()).execute(),
@@ -3539,8 +3549,9 @@ public class MainFrame extends javax.swing.JFrame {
 					objectInputStream.close();
 					socket.close();
 				} catch (IOException | ClassNotFoundException e) {
-					e.printStackTrace();
-				} finally {
+							System.out.println("[WARNING] " + e.getMessage());
+							JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
+						} finally {
 					SwingUtilities.invokeLater(() -> {
 						imageViewer.setImageLoader(imageLoader);
 						imageViewer.repaint();
@@ -3562,7 +3573,7 @@ public class MainFrame extends javax.swing.JFrame {
 			BufferedImage bufferedImage = null;
 			bufferedImage = imageLoader.getBufferedImage();
 			RGBA[][] image = imageLoader.getOriginalColor();
-			if(setting.isUseLocalHardware()) {
+			if (setting.isUseLocalHardware()) {
 				RgbImageHelper rgbImageHelper = new RgbImageHelper(image);
 				
 				int[][] redOperation = new CustomFilter2(rgbImageHelper.getReds()).execute(),
@@ -3599,8 +3610,9 @@ public class MainFrame extends javax.swing.JFrame {
 					objectInputStream.close();
 					socket.close();
 				} catch (IOException | ClassNotFoundException e) {
-					e.printStackTrace();
-				} finally {
+							System.out.println("[WARNING] " + e.getMessage());
+							JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
+						} finally {
 					SwingUtilities.invokeLater(() -> {
 						imageViewer.setImageLoader(imageLoader);
 						imageViewer.repaint();
@@ -3622,7 +3634,7 @@ public class MainFrame extends javax.swing.JFrame {
 			BufferedImage bufferedImage = null;
 			bufferedImage = imageLoader.getBufferedImage();
 			RGBA[][] image = imageLoader.getOriginalColor();
-			if(setting.isUseLocalHardware()) {
+			if (setting.isUseLocalHardware()) {
 				RgbImageHelper rgbImageHelper = new RgbImageHelper(image);
 				
 				int[][] redOperation = new CustomFilter3(rgbImageHelper.getReds()).execute(),
@@ -3659,8 +3671,9 @@ public class MainFrame extends javax.swing.JFrame {
 					objectInputStream.close();
 					socket.close();
 				} catch (IOException | ClassNotFoundException e) {
-					e.printStackTrace();
-				} finally {
+							System.out.println("[WARNING] " + e.getMessage());
+							JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
+						} finally {
 					SwingUtilities.invokeLater(() -> {
 						imageViewer.setImageLoader(imageLoader);
 						imageViewer.repaint();

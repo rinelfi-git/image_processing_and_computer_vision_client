@@ -4,9 +4,9 @@ import emit.ipcv.engines.interfaces.PlaneTransformation;
 
 public class Rotation2D extends PlaneTransformation {
 
-  private double angle;
+  private float angle;
 
-  public Rotation2D(int[][] image, final double angle) {
+  public Rotation2D(int[][] image, final float angle) {
     this.image = image;
     this.angle = angle;
     this.transformationMatrix = this.initMatriceDeTransformation();
