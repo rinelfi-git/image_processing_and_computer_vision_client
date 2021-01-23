@@ -307,7 +307,7 @@ public class MainFrame extends javax.swing.JFrame {
 	}//GEN-LAST:event_topHatOpeningMenuActionPerformed
 	
 	private void topHatClosureMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_topHatClosureMenuActionPerformed
-		thickeningClosurePerformed();
+		topHatClosurePerformed();
 	}//GEN-LAST:event_topHatClosureMenuActionPerformed
 	
 	private void allOrNothingMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_allOrNothingMenuActionPerformed
@@ -3511,10 +3511,10 @@ public class MainFrame extends javax.swing.JFrame {
 		}).start();
 	}
 	
-	private void thickeningClosurePerformed() {
+	private void topHatClosurePerformed() {
 		new Thread(() -> {
-			StructuringElementDialog thickeningOpeningDialog = new StructuringElementDialog(this, true).setTranslation(translationModel).setLanguage(language).initLanguage();
-			thickeningOpeningDialog.addOrigineListener(values -> new Thread(() -> {
+			StructuringElementDialog topHatClosureDialog = new StructuringElementDialog(this, true).setTranslation(translationModel).setLanguage(language).initLanguage();
+			topHatClosureDialog.addOrigineListener(values -> new Thread(() -> {
 				System.out.println("[INFO] Top hat closure");
 				SwingUtilities.invokeLater(() -> processingBar.setVisible(true));
 				ImageLoader imageLoader = imageViewer.getImageLoader();
@@ -3524,6 +3524,7 @@ public class MainFrame extends javax.swing.JFrame {
 					int x = (int) values[0];
 					int y = (int) values[1];
 					int[][] structuringElement = (int[][]) values[2];
+					
 					int[][] binaryGrayscale = new ThresholdingBinarization(new RgbImageHelper(imageLoader.getOriginalColor()).getGrayscale(), new Otsu(new RgbImageHelper(imageLoader.getOriginalColor()).getGrayscale()).execute()).execute();
 					int[][] closingGrayscale = new Erosion(structuringElement, x, y, new Dilation(structuringElement, x, y, binaryGrayscale).execute()).execute();
 					GrayscaleImageHelper openingGrayscaleHelper = new GrayscaleImageHelper(closingGrayscale);
@@ -3556,8 +3557,10 @@ public class MainFrame extends javax.swing.JFrame {
 						ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
 						DataPacket outputPacket = new DataPacket();
 						Map<String, Object> outputData = new HashMap<>();
-						outputData.put("values", values);
-						outputData.put("image-loader", imageLoader);
+						outputData.put("x", values[0]);
+						outputData.put("y", values[1]);
+						outputData.put("structuring-element", values[2]);
+						outputData.put("image", imageLoader.getOriginalColor());
 						objectOutputStream.writeObject(outputPacket.setHeader(Const.TOP_HAT_CLOSURE).setData(outputData));
 						objectOutputStream.flush();
 						ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
@@ -3584,7 +3587,7 @@ public class MainFrame extends javax.swing.JFrame {
 					}
 				}
 			}).start());
-			thickeningOpeningDialog.setVisible(true);
+			topHatClosureDialog.setVisible(true);
 		}).start();
 	}
 	
