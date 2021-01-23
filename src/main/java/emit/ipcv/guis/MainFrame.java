@@ -2771,7 +2771,7 @@ public class MainFrame extends javax.swing.JFrame {
 					Socket socket = new Socket(setting.getRemoteIpAddress(), setting.getRemotePortAddress());
 					ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
 					DataPacket outputPacket = new DataPacket();
-					objectOutputStream.writeObject(outputPacket.setHeader(Const.PAPERT_TURTLE).setData(imageLoader));
+					objectOutputStream.writeObject(outputPacket.setHeader(Const.PAPERT_TURTLE).setData(imageLoader.getOriginalColor()));
 					objectOutputStream.flush();
 					ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
 					DataPacket result = (DataPacket) objectInputStream.readObject();
@@ -3627,7 +3627,38 @@ public class MainFrame extends javax.swing.JFrame {
 					});
 					hasChanges = true;
 				} else {
-				
+					try{
+						Socket socket = new Socket(setting.getRemoteIpAddress(), setting.getRemotePortAddress());
+						ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+						DataPacket outputPacket = new DataPacket();
+						Map<String, Object> outputData = new HashMap<>();
+						outputData.put("structuring-element", structuringElement);
+						outputData.put("image", imageLoader.getOriginalColor());
+						objectOutputStream.writeObject(outputPacket.setHeader(Const.THICKENING).setData(outputData));
+						objectOutputStream.flush();
+						ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
+						DataPacket result = (DataPacket) objectInputStream.readObject();
+						RGBA[][] fullColorImage = (RGBA[][]) result.getData();
+						applyImageChange(fullColorImage, bufferedImage);
+						imageLoader.setOriginalColor(fullColorImage);
+						applicationHistory.append(fullColorImage);
+						
+						objectOutputStream.close();
+						objectInputStream.close();
+						socket.close();
+					} catch (IOException | ClassNotFoundException e) {
+						System.out.println("[WARNING] " + e.getMessage());
+						JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
+					} finally {
+						SwingUtilities.invokeLater(() -> {
+							imageViewer.setImageLoader(imageLoader);
+							imageViewer.repaint();
+							processingBar.setVisible(false);
+							currentTitle = newProject ? defaultTitle : currentTitle;
+							setTitle("[(" + translationModel.get(language, "not_registered") + ")] - " + currentTitle);
+						});
+						hasChanges = true;
+					}
 				}
 			}).start());
 			allOrNothingDialog.setVisible(true);
