@@ -303,7 +303,7 @@ public class MainFrame extends javax.swing.JFrame {
 	}//GEN-LAST:event_openingMenuActionPerformed
 	
 	private void topHatOpeningMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_topHatOpeningMenuActionPerformed
-		thickeningOpeningPerformed();
+		topHatOpeningPerformed();
 	}//GEN-LAST:event_topHatOpeningMenuActionPerformed
 	
 	private void topHatClosureMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_topHatClosureMenuActionPerformed
@@ -3432,11 +3432,11 @@ public class MainFrame extends javax.swing.JFrame {
 		}).start();
 	}
 	
-	private void thickeningOpeningPerformed() {
+	private void topHatOpeningPerformed() {
 		new Thread(() -> {
-			StructuringElementDialog thickeningOpeningDialog = new StructuringElementDialog(this, true).setTranslation(translationModel).setLanguage(language).initLanguage();
-			thickeningOpeningDialog.addOrigineListener(values -> new Thread(() -> {
-				System.out.println("[INFO] Top hat openingPerformed");
+			StructuringElementDialog topHatOpeningDialog = new StructuringElementDialog(this, true).setTranslation(translationModel).setLanguage(language).initLanguage();
+			topHatOpeningDialog.addOrigineListener(values -> new Thread(() -> {
+				System.out.println("[INFO] Top hat opening");
 				SwingUtilities.invokeLater(() -> processingBar.setVisible(true));
 				ImageLoader imageLoader = imageViewer.getImageLoader();
 				BufferedImage bufferedImage = null;
@@ -3477,8 +3477,10 @@ public class MainFrame extends javax.swing.JFrame {
 						ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
 						DataPacket outputPacket = new DataPacket();
 						Map<String, Object> outputData = new HashMap<>();
-						outputData.put("values", values);
-						outputData.put("image-loader", imageLoader);
+						outputData.put("x", values[0]);
+						outputData.put("y", values[1]);
+						outputData.put("structuring-element", values[2]);
+						outputData.put("image", imageLoader.getOriginalColor());
 						objectOutputStream.writeObject(outputPacket.setHeader(Const.TOP_HAT_OPENING).setData(outputData));
 						objectOutputStream.flush();
 						ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
@@ -3505,7 +3507,7 @@ public class MainFrame extends javax.swing.JFrame {
 					}
 				}
 			}).start());
-			thickeningOpeningDialog.setVisible(true);
+			topHatOpeningDialog.setVisible(true);
 		}).start();
 	}
 	
