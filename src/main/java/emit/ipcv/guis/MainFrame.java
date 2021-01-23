@@ -46,6 +46,9 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.util.HashMap;
@@ -2115,7 +2118,7 @@ public class MainFrame extends javax.swing.JFrame {
 	          hasChanges = true;
           } else {
 	          try {
-		          Socket socket = new Socket(setting.getRemoteIpAddress(), setting.getRemotePortAddress());
+	          	Socket socket = new Socket(setting.getRemoteIpAddress(), setting.getRemotePortAddress());
 		          ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
 		          DataPacket outputPacket = new DataPacket();
 		          Map<String, Object> outputData = new HashMap<>();
@@ -2123,6 +2126,7 @@ public class MainFrame extends javax.swing.JFrame {
 		          outputData.put("image", image);
 		          objectOutputStream.writeObject(outputPacket.setHeader(Const.SHEAR).setData(outputData));
 		          objectOutputStream.flush();
+		          
 		          ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
 		          DataPacket result = (DataPacket) objectInputStream.readObject();
 		          RGBA[][] fullColorImage = (RGBA[][]) result.getData();

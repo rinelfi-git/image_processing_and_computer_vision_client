@@ -253,7 +253,7 @@ public class RemoteServerConfigurationDialog extends javax.swing.JDialog impleme
 			}
 		} else {
 			connectionStateLab.setForeground(Color.decode("#FF3333"));
-			connectionStateLab.setText("ip [xxx.xxx.xxx.xxx], port [1024 -> 65000]");
+			connectionStateLab.setText("Port [1024 -> 65000]");
 		}
 	}//GEN-LAST:event_testButtonActionPerformed
 	
