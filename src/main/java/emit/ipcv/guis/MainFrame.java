@@ -1726,8 +1726,7 @@ public class MainFrame extends javax.swing.JFrame {
 						processingBar.setVisible(true);
 					});
 					ImageLoader imageLoader = imageViewer.getImageLoader();
-					BufferedImage bufferedImage = null;
-					bufferedImage = imageLoader.getBufferedImage();
+					BufferedImage bufferedImage = imageLoader.getBufferedImage();
 					if (setting.isUseLocalHardware()) {
 						int x = (int) values[0];
 						int y = (int) values[1];
@@ -1750,7 +1749,40 @@ public class MainFrame extends javax.swing.JFrame {
 						});
 						hasChanges = true;
 					} else {
+						try{
+						Socket socket = new Socket(setting.getRemoteIpAddress(), setting.getRemotePortAddress());
+						ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+						DataPacket outputPacket = new DataPacket();
+						Map<String, Object> outputData = new HashMap<>();
+						outputData.put("x", values[0]);
+						outputData.put("y", values[1]);
+						outputData.put("structuring-element", values[2]);
+						outputData.put("image", imageLoader.getOriginalColor());
+						objectOutputStream.writeObject(outputPacket.setHeader(Const.EROSION).setData(outputData));
+						objectOutputStream.flush();
+						ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
+						DataPacket result = (DataPacket) objectInputStream.readObject();
+						RGBA[][] fullColorImage = (RGBA[][]) result.getData();
+						applyImageChange(fullColorImage, bufferedImage);
+						imageLoader.setOriginalColor(fullColorImage);
+						applicationHistory.append(fullColorImage);
 						
+						objectOutputStream.close();
+						objectInputStream.close();
+						socket.close();
+					} catch (IOException | ClassNotFoundException e) {
+						System.out.println("[WARNING] " + e.getMessage());
+						JOptionPane.showMessageDialog(this, "Unable to terminate the current operation\nDetail: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()), "Processing error", JOptionPane.ERROR_MESSAGE);
+					} finally {
+						SwingUtilities.invokeLater(() -> {
+							imageViewer.setImageLoader(imageLoader);
+							imageViewer.repaint();
+							processingBar.setVisible(false);
+							currentTitle = newProject ? defaultTitle : currentTitle;
+							setTitle("[(" + translationModel.get(language, "not_registered") + ")] - " + currentTitle);
+						});
+						hasChanges = true;
+					}
 					}
 				}).start();
 			});
